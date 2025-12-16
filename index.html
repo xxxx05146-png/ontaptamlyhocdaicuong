@@ -67,9 +67,9 @@
         <h2 id="auth-title">Đăng Nhập</h2>
         <div class="input-group"><input type="text" id="username" placeholder="Tên đăng nhập"></div>
         <div class="input-group"><input type="password" id="password" placeholder="Mật khẩu"></div>
-        <button class="btn btn-primary" onclick="handleAuth()" style="width:100%; padding: 12px;">Đăng Nhập</button>
+        <button id="btn-action" onclick="handleAuth()" style="width:100%; padding: 12px;">Đăng Nhập</button>
         <p style="margin-top:15px; font-size:14px;">
-            <a href="#" onclick="toggleAuthMode()" id="switch-link">Chưa có tài khoản? Đăng ký ngay</a>
+            <a href="javascript:void(0)" onclick="toggleAuthMode()" id="switch-link">Chưa có tài khoản? Đăng ký ngay</a>
         </p>
         <p id="auth-msg" style="color:red"></p>
     </div>
@@ -2060,5 +2060,6 @@ nhận thấy có sự khác biệt về sự điều chỉnh âm thanh?",
 </script>
 </body>
 </html>
+
 
 
