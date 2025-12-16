@@ -1792,7 +1792,7 @@
     
     // Biến cho Timer
     let timerInterval;
-    const TIME_LIMIT = 30 * 60; // 60 phút (tính bằng giây)
+    const TIME_LIMIT = 60 * 60; // 60 phút (tính bằng giây)
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -1977,7 +1977,7 @@
         document.getElementById("score-board").style.display = "none";
         
         // Reset Timer hiển thị
-        document.getElementById("timer-box").textContent = "30:00";
+        document.getElementById("timer-box").textContent = "60:00";
 
         const container = document.getElementById("quiz-container");
         let html = "";
@@ -2055,6 +2055,7 @@
 </script>
 </body>
 </html>
+
 
 
 
