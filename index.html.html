@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Ôn Tập (Có Timer)</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f0f2f5; padding: 20px; line-height: 1.6; color: #333; }
+        
+        /* CSS CHUNG */
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; color: white; font-size: 14px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary { background: #007bff; }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-danger { background: #dc3545; }
+        .btn-info { background: #17a2b8; }
+        .btn-secondary { background: #6c757d; }
+
+        /* HEADER */
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        
+        /* TIMER STYLE */
+        #timer-box { font-size: 20px; font-weight: bold; color: #dc3545; background: #fff3cd; padding: 5px 15px; border-radius: 20px; border: 1px solid #ffeeba; }
+
+        /* MÀN HÌNH LOGIN */
+        #auth-view { max-width: 400px; margin: 50px auto; text-align: center; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+
+        /* MÀN HÌNH DASHBOARD */
+        #dashboard-view { display: none; text-align: center; }
+        .deck-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .deck-card { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; transition: 0.2s; }
+        .deck-card:hover { border-color: #007bff; background: #e7f1ff; }
+        .deck-card h3 { margin: 0 0 10px 0; color: #007bff; }
+
+        /* MÀN HÌNH LỊCH SỬ */
+        #history-view { display: none; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .history-table th, .history-table td { border: 1px solid #dee2e6; padding: 10px; text-align: center; }
+        .history-table th { background-color: #e9ecef; color: #495057; }
+        .history-table tr:nth-child(even) { background-color: #f8f9fa; }
+        .high-score { color: #28a745; font-weight: bold; }
+        .low-score { color: #dc3545; }
+
+        /* MÀN HÌNH QUIZ */
+        #quiz-view { display: none; }
+        .question { margin-bottom: 20px; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; }
+        .options label { display: block; padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 1px solid #eee; }
+        .options label:hover { background: #e2e6ea; }
+        .options input { margin-right: 10px; }
+
+        /* KẾT QUẢ */
+        .correct { background: #d4edda !important; border-color: #c3e6cb !important; color: #155724; font-weight: bold; }
+        .wrong { background: #f8d7da !important; border-color: #f5c6cb !important; opacity: 0.7; text-decoration: line-through; }
+        .explain { margin-top: 10px; font-weight: bold; color: #28a745; display: none; padding: 10px; border: 1px dashed #28a745; background: #f0fff4; border-radius: 5px;}
+        #score-board { text-align: center; font-size: 20px; font-weight: bold; margin: 20px 0; padding: 15px; display: none; border-radius: 8px; }
+        
+        .footer-nav { margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-view" class="container">
+        <h2 id="auth-title">Đăng Nhập</h2>
+        <div class="input-group"><input type="text" id="username" placeholder="Tên đăng nhập"></div>
+        <div class="input-group"><input type="password" id="password" placeholder="Mật khẩu"></div>
+        <button class="btn btn-primary" onclick="handleAuth()" style="width:100%; padding: 12px;">Đăng Nhập</button>
+        <p style="margin-top:15px; font-size:14px;">
+            <a href="#" onclick="toggleAuthMode()" id="switch-link">Chưa có tài khoản? Đăng ký ngay</a>
+        </p>
+        <p id="auth-msg" style="color:red"></p>
+    </div>
+
+    <div id="dashboard-view" class="container">
+        <div class="header-bar">
+            <span>Xin chào, <b id="user-display" style="color:#007bff">User</b></span>
+            <div>
+                <button class="btn btn-info" onclick="showHistory()">🕒 Lịch Sử</button>
+                <button class="btn btn-danger" onclick="logout()">Đăng xuất</button>
+            </div>
+        </div>
+        <h1>Chọn Bộ Đề Ôn Tập</h1>
+        <p>Đề ôn tập TLHĐC (By TMK-51.11.SPTOAN)</p>
+        
+        <div class="deck-grid">
+            <div class="deck-card" onclick="startQuiz(1)">
+                <h3>Bộ Đề 1</h3>
+                <p>Câu 1 - 50</p>
+            </div>
+            <div class="deck-card" onclick="startQuiz(2)">
+                <h3>Bộ Đề 2</h3>
+                <p>Câu 51 - 100</p>
+            </div>
+            <div class="deck-card" onclick="startQuiz(3)">
+                <h3>Bộ Đề 3</h3>
+                <p>Câu 101 - 150</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="history-view" class="container">
+        <div class="header-bar">
+            <button class="btn btn-secondary" onclick="backToDashboard()">⬅ Quay lại</button>
+            <h2 style="margin:0">Lịch Sử</h2>
+            <button class="btn btn-warning" onclick="clearHistory()">🗑 Xóa hết</button>
+        </div>
+        <div id="history-content"></div>
+    </div>
+
+    <div id="quiz-view" class="container">
+        <div class="header-bar">
+            <span style="font-weight:bold; font-size: 18px;" id="quiz-title">Bộ Đề ...</span>
+            <div id="timer-box">30:00</div>
+        </div>
+        
+        <div id="score-board"></div>
+        <div id="quiz-container">Đang tải...</div>
+
+        <div class="footer-nav">
+            <button id="submit-btn" class="btn btn-success" style="font-size: 16px; padding: 10px 30px;" onclick="checkAnswers()">Nộp Bài</button>
+            <button id="retry-btn" class="btn btn-primary" style="font-size: 16px; padding: 10px 30px; display:none; margin-right: 10px;" onclick="retryCurrentDeck()">Làm Lại Đề Này</button>
+            <button id="exit-btn" class="btn btn-secondary" style="font-size: 16px; padding: 10px 30px; display:none" onclick="backToDashboard()">Về Menu</button>
+        </div>
+    </div>
+
+<script>
+   const database = [
+  // --- ĐỀ 1 ---
+  {
+    id: 1,
+    q: "“Lan vô tình ăn phải ớt cay, nước mắt, nước mũi chảy giàn giụa, mắt như mờ đi, tai như ù lên”. Hiện tượng này có liên quan đến quy luật nào của cảm giác?",
+    a: [
+      "Quy luật thích ứng của cảm giác.",
+      "Quy luật tác động lẫn nhau giữa các cảm giác khác loại.",
+      "Quy luật ngưỡng của cảm giác.",
+      "Quy luật tác động lẫn nhau giữa các cảm giác cùng loại."
+    ],
+    correct: 1 // 1B
+  },
+  {
+    id: 2,
+    q: "Một giáo viên được đồng nghiệp nhận xét là “chu đáo, kiên trì và dễ cảm thông”. Điều này thể hiện rõ nhất đặc điểm nào của tính cách?",
+    a: [
+      "Thuộc tính bẩm sinh, khó thay đổi",
+      "Chỉ biểu hiện qua khả năng trí tuệ",
+      "Hệ thống thái độ ổn định đối với bản thân, người khác và công việc",
+      "Sự tổng hợp các thuộc tính khí chất"
+    ],
+    correct: 2 // 2C
+  },
+  {
+    id: 3,
+    q: "Đâu là mệnh đề đúng dùng để phân biệt cảm giác và tri giác?",
+    a: [
+      "Cảm giác phản ánh riêng lẻ từng thuộc tính của sự vật hiện tượng, tri giác phản ánh khái quát các thuộc tính bản chất của sự vật hiện tượng.",
+      "Cảm giác phản ánh thuộc tính bề ngoài của sự vật hiện tượng, tri giác phản ánh các thuộc tính bản chất, bên trong của sự vật hiện tượng.",
+      "Cảm giác phản ánh riêng lẻ từng thuộc tính bề ngoài của sự vật hiện tượng, tri giác phản ánh sự vật hiện tượng một cách hoàn chỉnh, biết rõ ràng sự vậy này hay sự vật kia.",
+      "Cảm giác phản ánh sự vật hiện tượng một cách trực tiếp, tri giác phản ánh sự vật hiện một cách gián tiếp thông qua các phương tiện, công cụ trung gian, máy móc…"
+    ],
+    correct: 2 // 3C
+  },
+  {
+    id: 4,
+    q: "Trong lớp học, khi giảng viên vừa nói vừa chiếu slide, sinh viên chú ý nhiều hơn đến hình ảnh có màu sắc nổi bật thay vì chữ trắng đen. Đây là minh chứng cho:",
+    a: [
+      "Tính ảo ảnh",
+      "Tính lựa chọn của tri giác",
+      "Tính có ý nghĩa",
+      "Tính ổn định"
+    ],
+    correct: 1 // 4B
+  },
+  {
+    id: 5,
+    q: "Một bạn nhỏ thường xuyên được khen ngợi và khuyến khích khi giúp đỡ bạn bè. Lâu dần, bạn ấy hình thành tình cảm yêu thương và quan tâm đến người khác. Đây là minh họa cho quy luật nào?",
+    a: [
+      "Quy luật tương phản tình cảm.",
+      "Quy luật thích ứng.",
+      "Quy luật lây lan tình cảm.",
+      "Quy luật hình thành tình cảm."
+    ],
+    correct: 3 // 5D
+  },
+  {
+    id: 6,
+    q: "Định nghĩa nào về chú ý là chuẩn xác nhất?",
+    a: [
+      "Trạng thái hưng phấn cảm xúc trước kích thích lạ.",
+      "Sự định hướng và tập trung hoạt động ý thức vào đối tượng/nhiệm vụ chủ đạo, huy động điều kiện tâm lý–sinh lý cần thiết để hoạt động đạt hiệu quả.",
+      "Khả năng ghi nhớ không chủ định.",
+      "Thói quen nhìn chằm chằm vào một điểm."
+    ],
+    correct: 1 // 6B
+  },
+  {
+    id: 7,
+    q: "“Việc không biết rõ – đừng nói. Chuyện chưa xảy ra – đừng tùy tiện nói bừa. Chuyện về người khác – đừng nên bình luận.” Điều này thể hiện thể hiện rõ nhất chức năng nào của giao tiếp?",
+    a: [
+      "Chức năng thông tin hai chiều",
+      "Chức năng xúc cảm",
+      "Chức năng tổ chức và phối hợp hành động",
+      "Chức năng lắng nghe và phản hồi thông tin"
+    ],
+    correct: 3 // 7D
+  },
+  {
+    id: 8,
+    q: "Giáo viên muốn xây dựng bầu không khí học tập tích cực, nên khuyến khích một số học sinh xung phong phát biểu để tạo sự hào hứng cho các bạn khác trong lớp. Giáo viên đã áp dụng quy luật nào trong đời sống tình cảm?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật tương phản",
+      "Quy luật hình thành tình cảm",
+      "Quy luật lây lan"
+    ],
+    correct: 3 // 8D
+  },
+  {
+    id: 9,
+    q: "Một đứa trẻ bị thất lạc và sống nhiều năm trong rừng, dù có cấu tạo thể chất bình thường nhưng khi được tìm thấy lại không biết nói, không biết giao tiếp như con người, chỉ ăn uống và di chuyển giống động vật. Trường hợp này phản ánh đặc điểm nào của tâm lý người?",
+    a: [
+      "Tính tích cực",
+      "Tính sáng tạo",
+      "Tính lịch sử – xã hội",
+      "Tính chủ thể"
+    ],
+    correct: 2 // 9C
+  },
+  {
+    id: 10,
+    q: "Bức tranh Tiếng Thét của Edvard Munch mang ý nghĩa biểu tượng sâu sắc về nỗi sợ hãi... Khi vẽ bức tranh này, Edvard Munch đã thể hiện quá trình nào của hoạt động:",
+    a: [
+      "Quá trình chủ thể hoá",
+      "Quá trình khách thể hoá",
+      "Quá trình trừu tượng hoá",
+      "Quá trình xã hội hoá"
+    ],
+    correct: 1 // 10B
+  },
+  {
+    id: 11,
+    q: "Trong tiếp cận Tâm lý học, giao tiếp là sự tương tác giữa con người với con người nhằm trao đổi thông tin, cảm xúc và ảnh hưởng lẫn nhau. Vậy sự tương tác này về bản chất là:",
+    a: [
+      "Sự tương tác xã hội",
+      "Sự tương tác thoả mãn nhu cầu",
+      "Sự tương tác tâm lý",
+      "Sự tương tác thông tin và cảm xúc"
+    ],
+    correct: 2 // 11C
+  },
+  {
+    id: 12,
+    q: "Trong quá trình thực tập tại trường phổ thông, bạn gặp một lớp học có nhiều học sinh ít hợp tác... Vận dụng kiến thức về bản chất xã hội – lịch sử của tâm lý người, bạn nên làm gì?",
+    a: [
+      "Tổ chức các hoạt động học tập theo nhóm, tạo điều kiện để học sinh giao tiếp, chia sẻ và hỗ trợ lẫn nhau.",
+      "Nhắc nhở học sinh cần thay đổi ngay hành vi trên lớp, nếu không sẽ bị phê bình công khai và ghi nhận vào sổ đầu bài.",
+      "Yêu cầu học sinh luyện tập thêm kỹ năng giao tiếp ở nhà, đồng thời báo cáo chi tiết tiến bộ cho cả tập thể lớp vào cuối tuần.",
+      "Giải thích rằng tính cách rụt rè vốn do di truyền và ít thay đổi, vì vậy cần chấp nhận coi đó như một đặc điểm cố hữu của cá nhân."
+    ],
+    correct: 0 // 12A
+  },
+  {
+    id: 13,
+    q: "Trong các ví dụ sau, đâu thể hiện rõ tính chủ thể của tâm lý người?",
+    a: [
+      "Hai sinh viên cùng đọc một cuốn sách, một người thấy rất thú vị trong khi người kia lại thấy khô khan và khó hiểu.",
+      "Thanh niên thế hệ 8X thường mơ ước có việc làm ổn định, còn thế hệ Gen Z lại coi trọng trải nghiệm và cơ hội khởi nghiệp.",
+      "Một học sinh tưởng tượng ra những chi tiết mới khi viết tiếp câu chuyện được thầy cô gợi ý.",
+      "Một sinh viên kiên trì luyện tập mỗi ngày để cải thiện kỹ năng thuyết trình trước đám đông."
+    ],
+    correct: 0 // 13A
+  },
+  {
+    id: 14,
+    q: "Khi khoác lên mình màu áo của trường đại học Sư Phạm TP HCM để thi đấu trong giải bóng đá sinh viên thành phố, Tài cảm thấy rất vinh dự và tự hào... Những cảm xúc và hành vi của Tài là biểu hiện của?",
+    a: [
+      "Ý thức về bản thân",
+      "Nhu cầu thể hiện bản thân",
+      "Nhu cầu thể hiện trong nhóm",
+      "Ý thức nhóm, ý thức tập thể"
+    ],
+    correct: 3 // 14D
+  },
+  {
+    id: 15,
+    q: "Khi ăn món bún bò Huế, cảm giác ngon miệng không chỉ đến từ vị giác mà còn nhờ hương thơm, màu sắc hấp dẫn và âm thanh xì xụp. Đây thể hiện:",
+    a: [
+      "Tính có ý nghĩa",
+      "Tính ổn định",
+      "Tính đối tượng",
+      "Tính tổng giác của tri giác"
+    ],
+    correct: 3 // 15D
+  },
+  {
+    id: 16,
+    q: "Một người làm nghề nếm rượu vang (sommelier) chuyên nghiệp, qua quá trình học và luyện tập 3 năm có thể phân biệt hàng nghìn vị rượu khác nhau... Điều này thể hiện rõ nhất quy luật nào của cảm giác?",
+    a: [
+      "Quy luật thích ứng của cảm giác.",
+      "Quy luật ngưỡng cảm giác.",
+      "Quy luật tác động qua lại giữa các cảm giác khác loại.",
+      "Quy luật tác động qua lại giữa các cảm giác cùng loại."
+    ],
+    correct: 1 // 16B
+  },
+  {
+    id: 17,
+    q: "Một học sinh có khả năng cảm thụ âm nhạc tinh tế, nhanh chóng học thuộc giai điệu mới và biểu diễn tốt. Trường hợp này phản ánh:",
+    a: [
+      "Xu hướng nhân cách",
+      "Năng lực chuyên biệt trong lĩnh vực âm nhạc",
+      "Tính ổn định của nhân cách",
+      "Khí chất lạc quan"
+    ],
+    correct: 1 // 17B
+  },
+  {
+    id: 18,
+    q: "Một sinh viên thường xuyên nhìn nhận mọi tình huống dưới góc độ lạc quan, nhờ sự lặp đi lặp lại lâu dài mà tạo thành nét đặc trưng trong nhân cách. Đây là ví dụ về loại hiện tượng tâm lý nào?",
+    a: [
+      "Quá trình tâm lý",
+      "Trạng thái tâm lý",
+      "Thuộc tính tâm lý",
+      "Hiện tượng tâm lý có ý thức"
+    ],
+    correct: 2 // 18C
+  },
+  {
+    id: 19,
+    q: "Cách sáng tạo hình ảnh mới nào trong tưởng tượng được đặc trưng bởi việc kết hợp các bộ phận của nhiều sự vật, hiện tượng khác nhau (có thể giữ nguyên hoặc biến đổi) để tạo thành một hình ảnh mới?",
+    a: [
+      "Nhấn mạnh",
+      "Liên hợp",
+      "Chắp ghép",
+      "Điển hình hóa"
+    ],
+    correct: 1 // 19B
+  },
+  {
+    id: 20,
+    q: "Khi một sinh viên luôn thể hiện sự kính trọng và biết ơn thầy cô đã dạy dỗ mình, điều này cho thấy đặc điểm nào của đời sống tình cảm?",
+    a: [
+      "Tình cảm mang tính nhất thời, thay đổi nhanh chóng.",
+      "Tình cảm chỉ xuất hiện khi có tác động mạnh mẽ từ môi trường.",
+      "Tình cảm gắn liền với thái độ, hành vi ổn định trong quan hệ xã hội.",
+      "Tình cảm chỉ đơn thuần là phản ứng sinh lý bẩm sinh."
+    ],
+    correct: 2 // 20C
+  },
+  {
+    id: 21,
+    q: "Theo Phecne (Vebe): Ngưỡng sai biệt là 1 hằng số... Vậy ta cần tăng tối thiểu là bao nhiêu nấc âm lượng để người đó nhận thấy có sự khác biệt về sự điều chỉnh âm thanh?",
+    a: ["1", "2", "3", "4"],
+    correct: 2 // 21C
+  },
+  {
+    id: 22,
+    q: "Giao tiếp là sự tiếp xúc (1)..... giữa người với người thông qua đó con người trao đổi (2)........., (3)..........., tác động qua lại và ảnh hưởng lẫn nhau... Chọn cặp từ đúng điền vào chỗ trống",
+    a: [
+      "(1) tình cảm - (2) thông tin - (3) nhu cầu",
+      "(1) tinh thần - (2) thông tin - (3) mục đích",
+      "(1) tâm lý - (2) thông tin - (3) cảm xúc",
+      "(1) tâm lý - (2) thông tin - (3) nhu cầu"
+    ],
+    correct: 2 // 22C
+  },
+  {
+    id: 23,
+    q: "Khánh Kiệt là một người có tính cách cẩu thả... Tuy nhiên khi lên học đại học và ở trọ chung với nhiều bạn... Sự thay đổi hành vi của Khánh Kiệt là biểu hiện của",
+    a: [
+      "Tự ý thức",
+      "Ý thức cá nhân",
+      "Ý thức nhóm, ý thức tập thể",
+      "Nhận thức về lợi ích nhóm"
+    ],
+    correct: 2 // 23C
+  },
+  {
+    id: 24,
+    q: "Một kỹ sư quan sát cách cá heo định vị bằng sóng âm và thiết kế ra hệ thống sonar dưới biển. Đây là ví dụ cho cách sáng tạo hình ảnh mới nào trong tưởng tượng?",
+    a: [
+      "Nhấn mạnh chi tiết",
+      "Loại suy",
+      "Điển hình hóa",
+      "Chắp ghép"
+    ],
+    correct: 1 // 24B
+  },
+  {
+    id: 25,
+    q: "Điểm giống nhau cơ bản giữa xúc cảm và tình cảm là gì?",
+    a: [
+      "Đều mang tính bẩm sinh",
+      "Đều là những hiện tượng tâm lý thể hiện thái độ của con người đối với hiện thực",
+      "Đều được hình thành qua giáo dục, trải nghiệm",
+      "Đều hình thành chậm và bền vững"
+    ],
+    correct: 1 // 25B
+  },
+  {
+    id: 26,
+    q: "Vai trò của chú ý trong lớp học được diễn đạt đúng ở phương án nào?",
+    a: [
+      "Không làm thay đổi độ chính xác của nhận thức.",
+      "Chọn lọc thông tin liên quan, tăng tốc và nâng độ chính xác xử lý, qua đó nâng hiệu quả hoạt động.",
+      "Chỉ xuất hiện khi có thưởng.",
+      "Luôn cần nỗ lực tối đa."
+    ],
+    correct: 1 // 26B
+  },
+  {
+    id: 27,
+    q: "“Chè khi lạnh có vẻ ngọt hơn lúc đang nóng” là biểu hiện của quy luật nào?",
+    a: [
+      "Quy luật ngưỡng cảm giác.",
+      "Quy luật tác động qua lại giữa các cảm giác khác loại.",
+      "Quy luật tương phản đồng thời của cảm giác.",
+      "Quy luật thích ứng trong cảm giác."
+    ],
+    correct: 2 // 27C
+  },
+  {
+    id: 28,
+    q: "Nam khi mới nghe tin đậu vào trường đại học mơ ước thì vô cùng hạnh phúc, nhưng sau một thời gian cảm xúc vui sướng đó của Nam dần dịu lại và trở nên bình thường. Trường hợp này phản ánh:",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật tương phản",
+      "Quy luật hình thành tình cảm",
+      "Quy luật lây lan"
+    ],
+    correct: 0 // 28A
+  },
+  {
+    id: 29,
+    q: "Nhiều học sinh biết rõ hành vi xã rác không đúng nơi quy định là sai... giáo viên cần giáo dục, tập trung tác động tới mặt nào của trong cấu trúc ý thức của học sinh?",
+    a: [
+      "Mặt thái độ",
+      "Mặt nhận thức",
+      "Mặt hành vi",
+      "Tổng hợp ba mặt nhận thức, thái độ và hành vi"
+    ],
+    correct: 3 // 29D
+  },
+  {
+    id: 30,
+    q: "Nhiều bạn trẻ rất bận tâm về nhận xét của người khác với mình, và đánh giá bản thân theo quan niệm của người khác, thay đổi bản thân để làm hài lòng mọi người. Đây là biểu hiện sự phát triển chưa đầy đủ của?",
+    a: [
+      "Xu hướng phát triển bản thân",
+      "Tính cách chưa ổn định",
+      "Nhu cầu giao tiếp, xây dựng mối quan hệ",
+      "Tự ý thức"
+    ],
+    correct: 3 // 30D
+  },
+  {
+    id: 31,
+    q: "Mô tả nào dưới đây phản ánh quy luật tác động qua lại giữa các cảm giác khác loại?",
+    a: [
+      "Nếu tính nhạy cảm giảm xuống nhiều, cảm giác con người trở nên chai sạn, giúp con người chịu đựng được những kích thích mạnh và lâu.",
+      "Người mù định hướng trong không gian chủ yếu dựa vào các cảm giác đụng chạm, sờ mó, khứu giác, vận động và cảm giác rung.",
+      "Nếu nhúng tay vào nước lạnh, sau đó nhúng tay vào nước ở nhiệt độ bình thường sẽ thấy nước bình thường rất ấm.",
+      "Phòng hòa nhạc thường tắt đèn để thính giả nghe rõ hơn."
+    ],
+    correct: 3 // 31D
+  },
+  {
+    id: 32,
+    q: "Sự khác nhau chủ yếu giữa nhận thức và tình cảm là:",
+    a: [
+      "Nhận thức giúp con người phản ánh thế giới, còn tình cảm giúp con người bộc lộ thái độ với thế giới",
+      "Nhận thức và tình cảm đều chỉ nhằm thỏa mãn nhu cầu sinh học",
+      "Nhận thức gắn với rung động cảm xúc, còn tình cảm gắn với quá trình tư duy",
+      "Nhận thức biểu hiện qua thái độ ổn định, còn tình cảm biểu hiện qua suy luận logic"
+    ],
+    correct: 0 // 32A
+  },
+  {
+    id: 33,
+    q: "Trong buổi cắm trại, nhìn vào bóng cây in trên tường, một số học sinh tưởng là “người lạ đứng ngoài cửa”. Đây là hiện tượng nào?",
+    a: [
+      "Tính đối tượng",
+      "Tính ảo ảnh của tri giác",
+      "Tính lựa chọn",
+      "Tính tổng giác"
+    ],
+    correct: 1 // 33B
+  },
+  {
+    id: 34,
+    q: "Để tránh nhàm chán khiến hiệu quả động viên không cao, một nhà trường đã thay đổi hình thức khen thưởng so với các năm học trước. Nhà trường đã áp dụng quy luật nào trong đời sống tình cảm?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật tương phản",
+      "Quy luật hình thành tình cảm",
+      "Quy luật lây lan"
+    ],
+    correct: 1 // 34B
+  },
+  {
+    id: 35,
+    q: "Đặc điểm “tình cảm có tính ổn định” được hiểu là:",
+    a: [
+      "Tình cảm khi đã hình thành thì tồn tại vĩnh viễn, không bao giờ mất đi",
+      "Tình cảm hình thành nhanh chóng và nhưng khó thay đổi",
+      "Tình cảm khi đã hình thành thì thường bền vững và khó thay đổi trong thời gian ngắn",
+      "Tình cảm chỉ ổn định trong thời kỳ con người đã trưởng thành"
+    ],
+    correct: 2 // 35C
+  },
+  {
+    id: 36,
+    q: "“Sức tập trung chú ý” được hiểu đúng là:",
+    a: [
+      "Khả năng duy trì chú ý rất lâu bất kể mục tiêu",
+      "Khả năng dồn năng lượng tâm lý vào phạm vi hẹp, đúng trọng tâm, đúng thời điểm của nhiệm vụ",
+      "Chia đều chú ý cho nhiều việc",
+      "Chuyển hướng chú ý linh hoạt"
+    ],
+    correct: 1 // 36B
+  },
+  {
+    id: 37,
+    q: "Những người dạy vĩ cầm có thể phân biệt hàng trăm sắc thái âm thanh khác nhau phát ra từ việc kéo đàn trong khi những người khác không đủ nhạy cảm để làm được điều tương tự. Điều này thể hiện rõ nhất quy luật nào của cảm giác?",
+    a: [
+      "Quy luật cảm ứng",
+      "Quy luật ngưỡng cảm giác",
+      "Quy luật tác động qua lại giữa các cảm giác khác loại",
+      "Quy luật tác động qua lại giữa các cảm giác cùng loại"
+    ],
+    correct: 1 // 37B
+  },
+  {
+    id: 38,
+    q: "Cố vấn học tập vừa trả lời email phụ huynh, vừa theo dõi bảng điểm mở trên hệ thống và kiểm tra lịch hẹn tư vấn. Thuộc tính chủ yếu:",
+    a: [
+      "Bền vững chú ý",
+      "Phân phối chú ý",
+      "Di chuyển chú ý",
+      "Tập trung chú ý"
+    ],
+    correct: 1 // 38B
+  },
+  {
+    id: 39,
+    q: "Mỗi cá nhân có hệ thống thái độ, giá trị, hành vi riêng biệt làm nên nét “không ai giống ai”. Điều này phản ánh đặc điểm nào của nhân cách?",
+    a: [
+      "Tính phát triển",
+      "Tính độc đáo",
+      "Tính xã hội – lịch sử",
+      "Tính ổn định"
+    ],
+    correct: 1 // 39B
+  },
+  {
+    id: 40,
+    q: "“Tính bền vững của chú ý” đối lập trực tiếp với:",
+    a: [
+      "Sự phân tán chú ý",
+      "Sức tập trung",
+      "Di chuyển chú ý",
+      "Lựa chọn chú ý"
+    ],
+    correct: 0 // 40A
+  },
+  {
+    id: 41,
+    q: "Khi đứng trước một hoàn cảnh có vấn đề, sự khác nhau chủ yếu giữa tư duy và tưởng tượng là:",
+    a: [
+      "Tư duy hướng vào việc phân tích và phát hiện bản chất, quy luật của sự vật; tưởng tượng thiên về xây dựng hình ảnh mới có thể vượt ra ngoài hiện thực",
+      "Tư duy và tưởng tượng đều phản ánh sự vật trực tiếp qua cảm giác và tri giác, không có sự khác biệt cơ bản",
+      "Tư duy chỉ tạo ra hình ảnh cụ thể, còn tưởng tượng chỉ tạo ra khái niệm trừu tượng",
+      "Tư duy luôn gắn với ngôn ngữ, còn tưởng tượng hoàn toàn tách rời khỏi ngôn ngữ"
+    ],
+    correct: 0 // 41A
+  },
+  {
+    id: 42,
+    q: "Một sinh viên thường xuyên chọn tham gia các hoạt động thiện nguyện, yêu thích việc giúp đỡ người khác. Hành vi lặp lại này cho thấy xu hướng của nhân cách phản ánh:",
+    a: [
+      "Khuynh hướng hành vi chịu chi phối bởi hoàn cảnh tức thời",
+      "Định hướng giá trị và động cơ ổn định, bền vững của cá nhân",
+      "Sự thay đổi ngẫu nhiên về cảm xúc",
+      "Tính ổn định sinh học của nhân cách"
+    ],
+    correct: 1 // 42B
+  },
+  {
+    id: 43,
+    q: "Một họa sĩ vẽ nhân vật quan lại xưa với chiếc mũ cực to, che khuất gần hết gương mặt để ám chỉ sự phô trương quyền lực. Đây là sản phẩm của cách sáng tạo hình ảnh mới nào trong tưởng tượng?",
+    a: [
+      "Liên hợp",
+      "Nhấn mạnh",
+      "Loại suy",
+      "Điển hình hóa"
+    ],
+    correct: 1 // 43B
+  },
+  {
+    id: 44,
+    q: "Dấu hiệu bản chất để phân biệt ghi nhớ có chủ định với không chủ định:",
+    a: [
+      "Cường độ kích thích.",
+      "Có mục đích ghi nhớ đặt trước và sử dụng biện pháp/ý chí để đạt mục đích.",
+      "Độ dài tài liệu.",
+      "Sự hấp dẫn thị giác."
+    ],
+    correct: 1 // 44B
+  },
+  {
+    id: 45,
+    q: "Bạn sắp xếp lịch học cho học sinh trước kiểm tra 1 tuần. Phương án nào khớp các quy luật đã biết về ghi nhớ – quên?",
+    a: [
+      "Học dồn 1 buổi tối trước ngày kiểm tra.",
+      "Ôn phân tán nhiều phiên ngắn; nhấn mạnh trọng tâm ở đầu – cuối; chèn thực hành ngắn.",
+      "Chỉ đọc lướt nhiều lần cho “quen mặt.”",
+      "Học khi cảm xúc mạnh, bỏ qua ngày mệt."
+    ],
+    correct: 1 // 45B
+  },
+  {
+    id: 46,
+    q: "Để đánh giá học sinh bằng lời hiệu quả... Lời nhận xét cần chỉ ra cả điểm mạnh, điểm yếu... Điều này thể hiện rõ nhất chức năng nào của giao tiếp?",
+    a: [
+      "Chức năng giáo dục và phát triển nhân cách.",
+      "Chức năng điều chỉnh, định hướng hành vi.",
+      "Chức năng thông tin.",
+      "Tất cả đều đúng."
+    ],
+    correct: 3 // 46D
+  },
+  {
+    id: 47,
+    q: "Trong các ví dụ sau, tình huống nào thể hiện tính tự chủ của ý chí?",
+    a: [
+      "Một sinh viên đặt mục tiêu đạt học bổng và lập kế hoạch học tập chi tiết để theo đuổi.",
+      "Một học sinh kiềm chế cảm xúc, không nổi nóng khi bị bạn trêu chọc trong lớp.",
+      "Một học sinh kiên nhẫn làm lại thí nghiệm khi thất bại lần đầu.",
+      "Một học sinh dứt khoát chọn hướng giải quyết của mình sau khi nghe gợi ý từ bạn bè."
+    ],
+    correct: 1 // 47B
+  },
+  {
+    id: 48,
+    q: "Một đứa trẻ sinh ra khỏe mạnh nhưng sống trong môi trường nghèo nàn, ít cơ hội giao tiếp xã hội. Theo quan điểm Tâm lý học, điều này cho thấy:",
+    a: [
+      "Sinh học quyết định toàn bộ sự phát triển nhân cách",
+      "Môi trường chỉ tác động nhỏ, không ảnh hưởng đáng kể đến nhân cách",
+      "Yếu tố sinh học là tiền đề, nhưng môi trường xã hội điều kiện cho sự phát triển nhân cách",
+      "Nhân cách hình thành chủ yếu do di truyền"
+    ],
+    correct: 2 // 48C
+  },
+  {
+    id: 49,
+    q: "Vai trò của nhận thức cảm tính trong mối quan hệ với nhận thức lý tính được thể hiện như thế nào?",
+    a: [
+      "Nhận thức cảm tính quyết định hoàn toàn nội dung và kết quả của nhận thức lý tính",
+      "Nhận thức cảm tính cung cấp tài liệu trực tiếp, làm cơ sở cho sự hình thành và phát triển của nhận thức lý tính",
+      "Nhận thức cảm tính luôn đúng đắn, không cần được kiểm tra bởi nhận thức lý tính",
+      "Nhận thức cảm tính không có vai trò gì trong quá trình nhận thức vì nó chỉ phản ánh bề ngoài sự vật"
+    ],
+    correct: 1 // 49B
+  },
+  {
+    id: 50,
+    q: "Một học sinh lần đầu thấy ký hiệu “ 𝛑 ” nhưng trong toán học chỉ sau khi được giải thích “ 𝛑  là 3,14...”, em mới thực sự hiểu được vấn đề. Đây là minh chứng cho:",
+    a: [
+      "Tính ổn định",
+      "Tính đối tượng",
+      "Tính có ý nghĩa",
+      "Tính ảo ảnh"
+    ],
+    correct: 2 // 50C
+  },
+
+  // --- ĐỀ 2 ---
+  {
+    id: 51,
+    q: "Trong các ví dụ sau, tình huống nào thể hiện tính kiên trì của ý chí?",
+    a: [
+      "Một sinh viên đứng trước nhiều lựa chọn và dứt khoát chọn phương án phù hợp để thực hiện ngay.",
+      "Một học sinh vẫn đều đặn luyện tập đàn piano hàng ngày dù nhiều lần bị chê chưa hay.",
+      "Một sinh viên giữ vững lập trường của mình dù bạn bè rủ rê làm theo số đông.",
+      "Một học sinh biết kiềm chế cơn tức giận để không tranh cãi với bạn trong lớp học."
+    ],
+    correct: 1 // 51B
+  },
+  {
+    id: 52,
+    q: "Một trường trung học phổ thông thường xuyên tổ chức các hoạt động thiện nguyện để học sinh dần hình thành phẩm chất nhân ái. Nhà trường đã áp dụng quy luật nào trong đời sống tình cảm?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật hình thành tình cảm",
+      "Quy luật tương phản",
+      "Quy luật lây lan"
+    ],
+    correct: 1 // 52B
+  },
+  {
+    id: 53,
+    q: "Thanh niên Việt Nam trong thập niên 1980 thường coi việc có một công việc ổn định tại cơ quan nhà nước là lý tưởng, trong khi thanh niên ngày nay lại quan tâm nhiều hơn đến cơ hội khởi nghiệp... Sự khác biệt này phản ánh đặc điểm nào của tâm lý người?",
+    a: [
+      "Tính tích cực",
+      "Tính sáng tạo",
+      "Tính lịch sử – xã hội",
+      "Tính chủ thể"
+    ],
+    correct: 2 // 53C
+  },
+  {
+    id: 54,
+    q: "“Nhìn căn phòng sơn màu xanh nước biển giữa trời Đông giá rét, Đức cảm giác nhiệt độ phòng như lạnh hơn thường ngày”. Đây là tên gọi của hiện tượng gì?",
+    a: [
+      "Tương phản đồng thời",
+      "Tương phản nối tiếp",
+      "Rối loạn cảm giác",
+      "Chuyển cảm giác"
+    ],
+    correct: 3 // 54D
+  },
+  {
+    id: 55,
+    q: "Trong giờ học, giảng viên đóng khung và dùng phấn màu cho các ý chính nên sinh viên dễ “nhìn ra” phần quan trọng giữa nhiều thông tin trên bảng. Hiện tượng này phản ánh quy luật nào của tri giác?",
+    a: [
+      "Tính đối tượng",
+      "Tính có ý nghĩa",
+      "Tính lựa chọn",
+      "Tính tổng giác"
+    ],
+    correct: 2 // 55C
+  },
+  {
+    id: 56,
+    q: "Đặc điểm nào sau đây cho thấy nhân cách không phải bẩm sinh mà hình thành qua hoạt động, giao tiếp và giáo dục?",
+    a: [
+      "Tính ổn định",
+      "Tính độc đáo",
+      "Tính xã hội – lịch sử",
+      "Tính thống nhất"
+    ],
+    correct: 2 // 56C
+  },
+  {
+    id: 57,
+    q: "Dưới góc độ tâm lý học, ý thức được hiểu như thế nào?",
+    a: [
+      "Ý thức dùng để chỉ những thái độ hay ứng xử của con người mà họ nhận biết được tính chất hợp lý, đúng đắn...",
+      "Ý thức là hình thức phản ánh tâm lý cao nhất chỉ riêng con người mới có, phản ánh bằng ngôn ngữ, là khả năng con người hiểu được những tri thức mà con người đã tiếp thu được.",
+      "Ý thức là một trong hai phạm trù cơ bản, đối lập của phạm trù vật chất.",
+      "Ý thức là có hiểu biết, tự giác và hành động phù hợp với đạo đức, pháp luật, văn hoá ứng xử"
+    ],
+    correct: 1 // 57B
+  },
+  {
+    id: 58,
+    q: "Trong các ví dụ sau, đâu không phải là hiện tượng tâm lý?",
+    a: [
+      "Học sinh cảm thấy tự tin khi trả lời đúng câu hỏi của thầy cô.",
+      "Học sinh hồi hộp khi chờ công bố kết quả kỳ thi quan trọng.",
+      "Học sinh toát mồ hôi nhiều khi chạy nhanh dưới sân trường.",
+      "Học sinh buồn bã khi không đạt được thành tích như mong muốn."
+    ],
+    correct: 2 // 58C
+  },
+  {
+    id: 59,
+    q: "Một học sinh khi học Lịch sử đã đối chiếu Cách mạng tháng Tám ở Việt Nam với Cách mạng Tháng Mười Nga để rút ra điểm chung và sự khác biệt... Thao tác tư duy nào được vận dụng chủ yếu trong trường hợp này?",
+    a: [
+      "Phân tích",
+      "Tổng hợp",
+      "So sánh",
+      "Khái quát hóa"
+    ],
+    correct: 2 // 59C
+  },
+  {
+    id: 60,
+    q: "Mặc dù biết rõ còn gần một tháng nữa mới nghĩ Tết, nhưng không hiểu sao những ngày gần nghĩ Tết khi đi học, nhiều bạn sinh viên lại có tâm trạng uể oải, ít tập trung, bắt đầu nghĩ về các việc sẽ làm trong dịp Tết. Đây là biểu hiện của?",
+    a: [
+      "Tính trì hoãn",
+      "Hiện tượng tâm thế (vô thức)",
+      "Tự ý thức",
+      "Nhu cầu"
+    ],
+    correct: 1 // 60B
+  },
+  {
+    id: 61,
+    q: "“Cảm giác và tri giác đều thuộc nhận thức cảm tính và đều phản ánh những thuộc tính bề ngoài của sự vật hiện tượng”. Thuật ngữ “bề ngoài” nêu trên được hiểu là:",
+    a: [
+      "Những thuộc tính bên ngoài của sự vật hiện tượng do các cơ quan cảm giác bên ngoài trực tiếp tiếp nhận.",
+      "Thuộc tính dùng để phân biệt với thuộc tính “bản chất” của nhận thức lý tính.",
+      "Vẻ biểu hiện ra bên ngoài của sự vật hiện tượng.",
+      "Sự phản ánh một cách riêng lẻ hay toàn vẹn các thuộc tính bên ngoài của sự vật hiện tượng."
+    ],
+    correct: 1 // 61B
+  },
+  {
+    id: 62,
+    q: "Một học sinh nhút nhát dần trở nên tự tin hơn khi thường xuyên tham gia thảo luận nhóm, được thầy cô khuyến khích và bạn bè động viên. Trường hợp này minh họa:",
+    a: [
+      "Ảnh hưởng quyết định của khí chất bẩm sinh",
+      "Vai trò của giáo dục, hoạt động và giao tiếp trong việc hình thành, phát triển nhân cách",
+      "Sự tác động ngẫu nhiên của hoàn cảnh",
+      "Nhân cách bất biến, không thay đổi theo trải nghiệm"
+    ],
+    correct: 1 // 62B
+  },
+  {
+    id: 63,
+    q: "Một học sinh khi làm văn đã mô tả nhân vật chính thành các khía cạnh: ngoại hình, tính cách, hành động, rồi sau đó kết nối lại để làm nổi bật chủ đề tác phẩm. Trong trường hợp này, học sinh đã vận dụng những thao tác tư duy nào?",
+    a: [
+      "So sánh và cụ thể hóa",
+      "Phân tích và tổng hợp",
+      "Trừu tượng hóa và khái quát hóa",
+      "Khái quát hóa và cụ thể hóa"
+    ],
+    correct: 1 // 63B
+  },
+  {
+    id: 64,
+    q: "Nhận định nào sau đây khớp với nội dung định nghĩa trí nhớ, tránh nhầm với tư duy?",
+    a: [
+      "Trí nhớ tạo ra khái niệm mới từ phân tích–tổng hợp.",
+      "Trí nhớ là quá trình giữ gìn và tái hiện cái đã biết, sản phẩm thường ở dạng biểu tượng và tri thức.",
+      "Trí nhớ phản ánh trực tiếp thuộc tính đang tác động lên giác quan.",
+      "Trí nhớ luôn đòi hỏi cảm xúc mạnh."
+    ],
+    correct: 1 // 64B
+  },
+  {
+    id: 65,
+    q: "Một kỹ sư quan sát cách ong xây tổ theo cấu trúc lục giác và áp dụng nguyên tắc này để thiết kế hệ thống kho chứa hàng tiết kiệm diện tích. Đây là ví dụ của cách sáng tạo hình ảnh mới nào trong tưởng tượng?",
+    a: [
+      "Nhấn mạnh",
+      "Liên hợp",
+      "Điển hình hóa",
+      "Loại suy"
+    ],
+    correct: 3 // 65D
+  },
+  {
+    id: 66,
+    q: "Tại sao nói ý thức là hiểu biết của hiểu biết (nhận thức của nhận thức), là phản ánh tâm lý cao nhất chỉ riêng con người mới có?",
+    a: [
+      "Ý thức phản ánh thái độ của chúng ta với sự vật hiện tượng xung quanh",
+      "Ý thức phản ánh hiểu biết của chúng ta với thế giới xung quanh",
+      "Ý thức phản ánh thế giới quan của con người về thế giới",
+      "Ý thức phản ánh bằng ngôn ngữ, là khả năng con người hiểu được những tri thức mà con người đã tiếp thu được."
+    ],
+    correct: 3 // 66D
+  },
+  {
+    id: 67,
+    q: "Nam biết quay bài trong lúc làm bài thi là sai, nhưng em vẫn hay quay bài khi đi thi các môn học. Xét trong cấu trúc của ý thức, Nam còn thiếu mặt của ý thức khi quay bài trong khi thi?",
+    a: [
+      "Mặt nhận thức",
+      "Mặt thái độ",
+      "Mặt năng động (mặt hành động)",
+      "Mặt thái độ và mặt năng động"
+    ],
+    correct: 2 // 67C
+  },
+  {
+    id: 68,
+    q: "Một giáo viên Hóa học khi giảng bài đã không tập trung vào các chi tiết riêng lẻ của từng kim loại (như màu sắc, độ cứng), mà hướng học sinh đến thuộc tính chung là “dẫn điện, dẫn nhiệt, có ánh kim”. Đây là ví dụ cho thao tác tư duy nào?",
+    a: [
+      "Tổng hợp",
+      "Trừu tượng hóa",
+      "So sánh",
+      "Cụ thể hóa"
+    ],
+    correct: 1 // 68B
+  },
+  {
+    id: 69,
+    q: "Một sự kiện nghề nghiệp gắn cảm xúc mạnh (lần đầu dạy thay thành công) thường được nhớ:",
+    a: [
+      "Kém hơn sự kiện trung tính",
+      "Sâu và bền hơn nhờ tính xúc cảm – ý nghĩa",
+      "Chỉ khi lặp lại nhiều",
+      "Không liên quan nhớ - quên"
+    ],
+    correct: 1 // 69B
+  },
+  {
+    id: 70,
+    q: "Hoạt động là mối quan hệ tác động qua lại giữa con người với thế giới để tạo ra sản phẩm cả về phía (1)........, cả về phía (2)...... Chọn cặp từ đúng điền vào chỗ trống (1) và (2):",
+    a: [
+      "(1) thế giới - (2) con người",
+      "(1) chủ thể - (2) khách thể",
+      "(1) tinh thần - (2) vật chất",
+      "(1) hiện thực - (2) tưởng tượng"
+    ],
+    correct: 1 // 70B (Note: Key B. Though grammatically 1-2 often match content, key dictates B)
+  },
+  {
+    id: 71,
+    q: "Hình thức nhận thức cảm tính cao nhất, tích cực, chủ động và có mục đích là",
+    a: [
+      "So sánh",
+      "Quan sát",
+      "Ngôn ngữ",
+      "Phân tích"
+    ],
+    correct: 1 // 71B
+  },
+  {
+    id: 72,
+    q: "Chu trình cốt lõi của trí nhớ trong tâm lý học gồm:",
+    a: [
+      "Cảm giác – tri giác – tư duy.",
+      "Ghi nhớ – lưu giữ –tái hiện: nhớ lại/nhận lại.",
+      "Học – luyện – kiểm tra.",
+      "Mã hóa – củng cố – phản xạ có điều kiện."
+    ],
+    correct: 1 // 72B
+  },
+  {
+    id: 73,
+    q: "Ý thức được mình là sinh viên sư phạm sau này sẽ làm giáo viên, Thành luôn ăn mặc lịch sự khi đi học, lời nói và hành vi cũng theo tính mô phạm. Những biểu hiện trên của Thành thể hiện mặt nào trong cấu trúc của ý thức?",
+    a: [
+      "Mặt nhận thức",
+      "Mặt thái độ",
+      "Mặt năng động (mặt hành động)",
+      "Mặt biểu hiện"
+    ],
+    correct: 2 // 73C
+  },
+  {
+    id: 74,
+    q: "Vận dụng tri thức về “tính thống nhất” của nhân cách, người thầy giáo cần làm gì trong số các việc làm dưới đây?",
+    a: [
+      "Yêu cầu tập thể học sinh đoàn kết và thống nhất trong hoạt động chung",
+      "Kết hợp các lực lượng giáo dục giữa nhà trường, gia đình và xã hội",
+      "Giáo dục toàn diện và dựa vào những nét nhân cách đã có",
+      "Giáo dục những nét nhân cách mới trong từng giai đoạn phát triển"
+    ],
+    correct: 2 // 74C
+  },
+  {
+    id: 75,
+    q: "Xu hướng được thể hiện trong trường hợp nào sau đây?",
+    a: [
+      "Trân dễ làm quen với mọi người, nhiệt tình với công việc nhưng mau chán",
+      "Hưng thích bóng đá, thích xem phim hài và sưu tầm tranh vẽ về Địa lý",
+      "Hồng có sức khỏe dẻo dai và chơi bóng chuyền hay nhất lớp",
+      "Liên dễ xúc động trước nỗi buồn của người khác và hay giúp đỡ họ"
+    ],
+    correct: 1 // 75B
+  },
+  {
+    id: 76,
+    q: "Giáo viên có thể giáo dục phát triển năng lực cho học sinh bằng cách nào sau đây?",
+    a: [
+      "Thuyết giảng và yêu cầu học sinh thuộc lòng nội dung bài học",
+      "Chỉ dẫn học sinh từng bước cách thực hiện và ứng dụng kiến thức bài học",
+      "Hướng dẫn học sinh thực hành và ứng dụng kiến thức đã học vào đời sống, sau đó trao đổi và điều chỉnh để hoàn thiện kiến thức, kỹ năng hơn",
+      "Cả 3 câu đều đúng"
+    ],
+    correct: 2 // 76C
+  },
+  {
+    id: 77,
+    q: "Mỗi cá nhân có hệ thống thái độ, giá trị, hành vi riêng biệt làm nên nét “không ai giống ai”. Điều này phản ánh đặc điểm nào của nhân cách?",
+    a: [
+      "Tính phát triển",
+      "Tính độc đáo",
+      "Tính xã hội – lịch sử",
+      "Tính ổn định"
+    ],
+    correct: 1 // 77B
+  },
+  {
+    id: 78,
+    q: "Khi tìm hiểu về tâm lý học sinh trong lớp mình, một sinh viên sư phạm cần vận dụng kiến thức về bản chất xã hội – lịch sử của tâm lý người bằng cách nào?",
+    a: [
+      "Dựa vào đặc điểm sinh học và cấu trúc của não bộ để giải thích hành vi của học sinh.",
+      "Xem xét bối cảnh, hoàn cảnh gia đình và những sự kiện đã tác động đến sự phát triển tâm lý.",
+      "Tập trung chủ yếu vào điểm số và kết quả kiểm tra để đánh giá tâm lý và năng lực học sinh.",
+      "Chú ý đến bản năng và nhu cầu sinh lý của học sinh vì chúng quyết định phần lớn trạng thái tâm lý."
+    ],
+    correct: 1 // 78B
+  },
+  {
+    id: 79,
+    q: "Khi nhìn chiếc bàn từ các góc khác nhau (chếch, trên xuống, xa – gần), hình ảnh tri giác về “chiếc bàn” vẫn giữ được tính vuông – chữ nhật quen thuộc. Đây là ví dụ của:",
+    a: [
+      "Tính tổng giác",
+      "Tính đối tượng",
+      "Tính ổn định của tri giác",
+      "Tính lựa chọn"
+    ],
+    correct: 2 // 79C
+  },
+  {
+    id: 80,
+    q: "Hoạt động là mối quan hệ tác động qua lại giữa con người (1.......) với thế giới (2...........) để tạo ra sản phẩm cả về phía thế giới, cả về phía con người. Chọn cặp từ đúng điền vào chỗ trống (1) và (2):",
+    a: [
+      "(1) Chủ thể - (2) Khách thể",
+      "(1) Khách thể - (2) Chủ thể",
+      "(1) Chủ động - (2) Bị động",
+      "(1) Bị động - (1) Chủ động"
+    ],
+    correct: 0 // 80A
+  },
+  {
+    id: 81,
+    q: "Tâm lý người có nguồn gốc từ:",
+    a: [
+      "Não người",
+      "Thế giới khách quan",
+      "Hoạt động của cá nhân",
+      "Các mối quan hệ xã hội của cá nhân"
+    ],
+    correct: 1 // 81B
+  },
+  {
+    id: 82,
+    q: "Đối tượng của tâm lý học là:",
+    a: [
+      "Sự hình thành, vận động và phát triển của hoạt động tâm lý",
+      "Dạng vận động chuyển tiếp trung gian từ vận động này sang vận động kia",
+      "Dạng vận động của thế giới tự nhiên và thế giới tâm linh của con người",
+      "Sự hình thành, vận động và phát triển của thế giới xã hội"
+    ],
+    correct: 0 // 82A
+  },
+  {
+    id: 83,
+    q: "Trong những hiện tượng dưới đây, đâu không được xem là hiện tượng tâm lý?",
+    a: [
+      "Lan không thể nào ngủ được, cứ nhắm mắt lại là cứ nghĩ về người thân đang điều trị tại bệnh viện",
+      "Nhìn kỹ vào đôi bàn tay của mẹ, Ngọc chợt nhận ra bàn tay mềm mại ngày nào giờ đã trở nên sần sùi, khô rát vì những vất vả của năm tháng",
+      "Sau khi tập thể dục với cường độ mạnh trong 30 phút, cơ thể Hùng đổ rất nhiều mồ hôi",
+      "Nhiều trẻ em bị rối loạn căng thẳng sau sang chấn khi người thân qua đời vì đại dịch Covid 19"
+    ],
+    correct: 2 // 83C
+  },
+  {
+    id: 84,
+    q: "Phản ánh tâm lý là:",
+    a: [
+      "Sự phản ánh có tính chất chủ quan của con người về các sự vật, hiện tượng trong hiện thực khách quan",
+      "Phản ánh tất yếu, hợp quy luật của con người trước những tác động, kích thích của thế giới khách quan",
+      "Quá trình tác động giữa con người với thế giới khách quan",
+      "Sự chuyển hoá trực tiếp thế giới khách quan vào đầu óc con người để tạo thành các hiện tượng tâm lý"
+    ],
+    correct: 0 // 84A
+  },
+  {
+    id: 85,
+    q: "Sau khi đọc tiểu thuyết về mối tình đầu của tác giả A, sinh viên B có nhiều bài học trong tình cảm của mình, B hy vọng mối tình đầu của mình sẽ có kết thúc đẹp hơn... Đây là quá trình nào của hoạt động?",
+    a: [
+      "Quá trình xuất tâm",
+      "Quá trình nhập tâm",
+      "Quá trình khách thể hoá",
+      "Tất cả đều đúng"
+    ],
+    correct: 1 // 85B
+  },
+  {
+    id: 86,
+    q: "Khi thực hiện nhiệm vụ thuyết trình trong học phần Tâm lý học đại cương, sinh viên phải nghiên cứu tài liệu, phân chia nội dung... Sau khi thuyết trình, giáo viên có thể đánh giá được năng lực làm việc của nhóm. Quá trình nào của hoạt động được thể hiện rõ trong tình huống trên?",
+    a: [
+      "Hoạt động mang tính đối tượng",
+      "Hoạt động có tính mục đích",
+      "Quá trình khách thể hóa (xuất tâm)",
+      "Quá trình chủ thể hóa (nhập tâm)"
+    ],
+    correct: 2 // 86C
+  },
+  {
+    id: 87,
+    q: "Tác giả A đã chuyển tâm tư, tình cảm của mình vào tiểu thuyết, tác phẩm là kỷ niệm về mối tình đầu của ông. Đây là quá trình nào của hoạt động?",
+    a: [
+      "Quá trình xuất tâm",
+      "Quá trình nhập tâm",
+      "Quá trình chủ thể hoá",
+      "Tất cả đều đúng"
+    ],
+    correct: 0 // 87A
+  },
+  {
+    id: 88,
+    q: "Dưới góc nhìn Tâm lý học hoạt động, khái niệm hoạt động nào sau đây đầy đủ nhất?",
+    a: [
+      "Hoạt động là sự biện chứng của chủ thể và khách thể",
+      "Hoạt động là sự tiêu hao năng lượng thần kinh và cơ bắp của con người khi tác động vào hiện thực khách quan nhằm thỏa mãn những nhu cầu của con người",
+      "Hoạt động là mối quan hệ tác động qua lại giữa con người và thế giới để tạo ra sản phẩm cả về phía thế giới, cả về phía con người",
+      "Hoạt động là mối quan hệ tác động qua lại giữa con người và thế giới (khách thể) để tạo ra sản phẩm cả về phía thế giới, cả về phía con người (khách thể)"
+    ],
+    correct: 3 // 88D
+  },
+  {
+    id: 89,
+    q: "Hoạt động luôn nhằm thoả mãn nhu cầu nào đó của con người. Khi nhu cầu gặp đối tượng thì sẽ trở thành....",
+    a: [
+      "Chủ thể",
+      "Động cơ",
+      "Niềm tin",
+      "Phương tiện"
+    ],
+    correct: 1 // 89B
+  },
+  {
+    id: 90,
+    q: "Chức năng giao tiếp nào thể hiện rõ nhất trong câu danh ngôn sau? “Có thể thấy được tính cách của một người qua cách anh ta nói chuyện.” (Menander)",
+    a: [
+      "Chức năng thông tin hai chiều",
+      "Chức năng giáo dục và phát triển nhân cách",
+      "Chức năng điều khiển, điều chỉnh hành vi",
+      "Chức năng nhận thức và đánh giá lẫn nhau"
+    ],
+    correct: 3 // 90D
+  },
+  {
+    id: 91,
+    q: "Phát biểu nào là sai khi tiếp cận giao tiếp dưới góc độ Tâm lý học:",
+    a: [
+      "Giao tiếp có thể xảy ra giữa con người với động vật",
+      "Giao tiếp không chỉ là quá trình trao đổi thông tin mà còn trao đổi cảm xúc, tình cảm",
+      "Giao tiếp là yếu tố quyết định đến sự hình thành và phát triển tâm lý",
+      "Giao tiếp là bắt buộc sử dụng tín hiệu ngôn ngữ bằng lời"
+    ],
+    correct: 3 // 91D
+  },
+  {
+    id: 92,
+    q: "Trong các trường hợp sau đây, trường hợp nào là hành vi vô thức?",
+    a: [
+      "Minh luôn biết rõ mình đang nghĩ gì, có thái độ như thế nào và đang làm gì",
+      "Hôm nay do uống ruợu say, Minh đã nói ra nhiều điều tâm sự mà trước đây chính Minh còn rất mơ hồ",
+      "Minh biết rõ mình học tập không phải chỉ vì lợi ích của mình mà còn vì danh dự của gia đình, dòng họ",
+      "Khi làm điều gì Minh cũng phân tích cẩn thận, đến khi hiểu rõ mới bắt tay vào làm"
+    ],
+    correct: 1 // 92B
+  },
+  {
+    id: 93,
+    q: "Tự ý thức được hiểu là?",
+    a: [
+      "Tự giáo dục bản thân theo lý tưởng của mình",
+      "So sánh bản thân với mọi người để điều chỉnh theo góp ý của nhiều người về một vấn đề nào đó",
+      "Năng lực nhận thức và xác định thái độ đối với bản thân, năng lực tự điều khiên, điều chỉnh hành vi, thái độ cũng như toàn bộ sự phát triển nhân cách",
+      "Tất cả các đáp án trên đều đúng"
+    ],
+    correct: 2 // 93C
+  },
+  {
+    id: 94,
+    q: "Cấu trúc của ý thức bao gồm:",
+    a: [
+      "Mặt nhận thức, mặt thái độ, mặt năng động của ý thức",
+      "Mặt ý thức, tiềm thức, vô thức",
+      "Suy nghĩ, tình cảm, trải nghiệm",
+      "Ý thức, tiền ý thức, siêu ngã, cái tôi, vô thức, bản năng nguyên thuỷ"
+    ],
+    correct: 0 // 94A
+  },
+  {
+    id: 95,
+    q: "Phát biểu nào đúng khi đề cập đến Ý thức dưới góc nhìn Tâm lý học:",
+    a: [
+      "Hình thức phản ánh tâm lý cao nhất của con người",
+      "Là khả năng hiểu được những gì con người tiếp thu",
+      "Là tri thức của tri thức, là phản ánh của phản ánh",
+      "Tất cả đều đúng"
+    ],
+    correct: 3 // 95D
+  },
+  {
+    id: 96,
+    q: "Đặc điểm thể hiện sự khác biệt căn bản của tri giác so với cảm giác là:",
+    a: [
+      "Phản ánh thuộc tính bên ngoài của sự vật, hiện tượng",
+      "Phản ánh sự vật, hiện tượng một cách trọn vẹn",
+      "Quá trình tâm lí",
+      "Chỉ xuất hiện khi sự vật hiện tượng tác động trực tiếp vào giác quan"
+    ],
+    correct: 1 // 96B
+  },
+  {
+    id: 97,
+    q: "Giáo viên hướng dẫn học sinh đồng tình với cái đẹp, cái tốt và không đồng tình với cái xấu, cái ác trong cuộc sống để giáo dục hành vi đạo đức cho các em. Giáo viên tác động đến thành phần nào trong cấu trúc của ý thức?",
+    a: [
+      "Mặt nhận thức",
+      "Mặt thái độ",
+      "Mặt hành động",
+      "Tất cả các đáp án trên đều đúng"
+    ],
+    correct: 1 // 97B
+  },
+  {
+    id: 98,
+    q: "Trong các trường hợp dưới đây, trường hợp nào là hành vi vô thức?",
+    a: [
+      "Nhiều sinh viên ăn bánh tráng trộn xong bỏ vào hộc bàn trong lớp rồi ra về luôn",
+      "Khi thuyết trình, Tâm có thói quen là hay dùng tay vuốt tóc",
+      "Tâm vượt đèn đỏ để kịp giờ thuyết trình",
+      "Tất cả các câu trên đều đúng"
+    ],
+    correct: 1 // 98B
+  },
+  {
+    id: 99,
+    q: "Hai hiện tượng tâm lý “Tư duy và tưởng tượng” là hai hiện tượng thuộc ở mặt nào trong cấu trúc ý thức của con người.",
+    a: [
+      "Mặt nhận thức của ý thức",
+      "Mặt thái độ của ý thức",
+      "Mặt cơ động của ý thức",
+      "Mặt năng động của ý thức"
+    ],
+    correct: 0 // 99A
+  },
+  {
+    id: 100,
+    q: "Để điều chỉnh hành vi của học sinh chưa ngoan. Giáo viên có thể áp dụng cấu trúc của ý thức để giáo dục. Biện pháp nào đem lại hiệu quả trong các biện pháp dưới đây?",
+    a: [
+      "Tác động về mặt thái độ để thay đổi hành vi, hành vi tốt lặp lại nhiều lần hình thành thói quen tốt",
+      "Tác động từ nhận thức để học sinh nhận biết hậu của hành vi chưa ngoan, từ đó hình thành thái độ đúng đắn, sau đó học sinh tự điều chỉnh hành vi của mình dưới sự hướng dẫn của giáo viên",
+      "Tác động vào mặt hành vi, thay đổi điều chỉnh từng thói quen tiêu cực, động viên khen ngợi khi học sinh làm tốt",
+      "Áp dụng kỷ luật, nhắc nhở thường xuyên, thực hiện nghiêm nội quy để điều chỉnh hành vi chưa ngoan"
+    ],
+    correct: 1 // 100B
+  },
+
+  // --- ĐỀ 3 ---
+  {
+    id: 101,
+    q: "Trong các trường hợp dưới đây, trường hợp nào là ý thức nhóm, ý thức tập thể?",
+    a: [
+      "Đàn kiến cùng nhau tha mồi về tổ",
+      "Gà mẹ hy sinh bảo vệ gà con dưới móng vuốt đại bàng",
+      "U23 Việt Nam quyết tâm chiến đấu hết mình vì màu cờ sắc áo Việt Nam giữa Thường Châu tuyết trắng",
+      "Tất cả đều đúng"
+    ],
+    correct: 2 // 101C
+  },
+  {
+    id: 102,
+    q: "“Cái tát của My dành cho Trí khiến Trí đau hơn gấp trăm lần vì lần này My đã hiểu lầm Trí...”. Phát biểu trên thể hiện đặc điểm nào trong bản chất xã hội - lịch sử của cảm giác ở con người?",
+    a: [
+      "Đối tượng phản ánh của cảm giác ở con người.",
+      "Cơ chế sinh lý của cảm giác con người.",
+      "Sự ảnh hưởng bởi những hiện tượng tâm lý cao cấp của con người.",
+      "Phương thức tạo ra cảm giác."
+    ],
+    correct: 2 // 102C
+  },
+  {
+    id: 103,
+    q: "Chú ý không chủ định phụ thuộc nhiều nhất vào:",
+    a: [
+      "Đặc điểm vật kích thích.",
+      "Xu hướng cá nhân.",
+      "Mục đích hoạt động.",
+      "Tình cảm của cá nhân."
+    ],
+    correct: 0 // 103A
+  },
+  {
+    id: 104,
+    q: "Nhận định nào sau đây KHÔNG đúng về cảm giác?",
+    a: [
+      "Cảm giác của con người có bản chất xã hội - lịch sử.",
+      "Cảm giác không chỉ phản ánh thuộc tính riêng lẻ của đối tượng bên ngoài mà còn phản ánh những biểu hiện bên trong cơ thể như: đói cồn cào, tim hồi hộp.",
+      "Cảm giác của con người phản ánh từng dạng kích thích riêng lẻ của từng giác quan kết hợp lại với nhau.",
+      "Cảm giác là hình thức đầu tiên trong hoạt động phản ánh của con người."
+    ],
+    correct: 2 // 104C
+  },
+  {
+    id: 105,
+    q: "Nhận định nào sau đây về chú ý là không phù hợp?",
+    a: [
+      "Chú ý quyết định nội dung các hoạt động tâm lý khác.",
+      "Chú ý không có đối tượng riêng.",
+      "Chú ý là trạng thái tâm lý.",
+      "Chú ý đi kèm và hỗ trợ các hoạt động tâm lý khác."
+    ],
+    correct: 0 // 105A
+  },
+  {
+    id: 106,
+    q: "“Cảnh hoàng hôn hôm nay sao nhìn không còn lộng lẫy như cái hồi mới yêu nữa… Có lẽ vết “đau tình” đã khiến tri giác của Minh thế này chăng?”. Hãy cho biết quy luật tri giác nào xuất hiện trong đoạn trích trên?",
+    a: [
+      "Quy luật về tính ổn định của tri giác.",
+      "Quy luật về tính đối tượng của tri giác.",
+      "Quy luật tổng giác.",
+      "Quy luật về tính ý nghĩa của tri giác."
+    ],
+    correct: 2 // 106C
+  },
+  {
+    id: 107,
+    q: "Cách sáng tạo hình ảnh mới trong tưởng tượng nào đã được Ngô Tất Tố sử dụng để xây dựng nhân vật Chị Dậu?",
+    a: [
+      "Chắp ghép.",
+      "Điển hình hoá.",
+      "Liên hợp.",
+      "Loại suy."
+    ],
+    correct: 1 // 107B
+  },
+  {
+    id: 108,
+    q: "Phát biểu nào sau đây không phản ánh đúng mối quan hệ giữa nhận thức cảm tính và nhận thức lý tính?",
+    a: [
+      "Nhận thức cảm tính cung cấp dữ liệu cho nhận thức lý tính.",
+      "Nhận thức lý tính giúp nhận thức cảm tính thêm sâu sắc.",
+      "Nhận thức cảm tính là cơ sở cần thiết, thúc đẩy nhận thức lý tính.",
+      "Nhận thức lý tính và nhận thức cảm tính đều giúp chủ thể có thêm những hiểu biết mới."
+    ],
+    correct: 3 // 108D
+  },
+  {
+    id: 109,
+    q: "“Thuỷ ngân có tính chất vật lý là có sự thay đổi mạnh về thể tích khi nhiệt độ thay đổi... Chính vì tính chất vật lý này mà người ta sử dụng thuỷ ngân để làm nhiệt kế”. Đây là biểu hiện thao tác nào của tư duy?",
+    a: [
+      "Phân tích.",
+      "Tổng hợp.",
+      "Cụ thể hóa.",
+      "Trừu tượng hóa."
+    ],
+    correct: 3 // 109D
+  },
+  {
+    id: 110,
+    q: "Một tình huống muốn làm nảy sinh tư duy phải thoả mãn một số điều kiện. Điều kiện nào dưới đây là không cần thiết?",
+    a: [
+      "Tình huống phải chứa vấn đề mà hiểu biết cũ, phương pháp hành động cũ không giải quyết được.",
+      "Cá nhân nhận thức được tình huống và muốn giải quyết.",
+      "Tình huống phải quen thuộc, không xa lạ với cá nhân.",
+      "Vấn đề trong tình huống có liên quan đến kinh nghiệm của cá nhân."
+    ],
+    correct: 2 // 110C
+  },
+  {
+    id: 111,
+    q: "Khi đọc sách, ta thấy nội dung sách có những chữ in nghiêng hay in đậm tạo ra sự khác biệt với các dòng chữ còn lại để làm người đọc ấn tượng. Cách làm này là vận dụng từ quy luật nào của tri giác?",
+    a: [
+      "Quy luật về tính lựa chọn trong tri giác.",
+      "Quy luật về tính ổn định trong tri giác.",
+      "Quy luật về tính có ý nghĩa trong tri giác.",
+      "Quy luật tổng giác trong tri giác."
+    ],
+    correct: 0 // 111A
+  },
+  {
+    id: 112,
+    q: "Khả năng cùng một lúc, chú ý đầy đủ đến nhiều đối tượng hay nhiều hoạt động khác nhau một cách có chủ định là thuộc tính nào của chú ý?",
+    a: [
+      "Sự tập trung chú ý.",
+      "Tính bền vững của chú ý.",
+      "Sự phân phối chú ý.",
+      "Sự di chuyển chú ý."
+    ],
+    correct: 2 // 112C
+  },
+  {
+    id: 113,
+    q: "Việc hoạ sĩ mô tả vẽ đẹp của người phụ nữ thông qua nét vẽ đường cong hình chữ S đã sử dụng cách tưởng tượng sáng tạo nào?",
+    a: [
+      "Thay đổi kích thước, số lượng của sự vật hay các thành phần của sự vật.",
+      "Nhấn mạnh các chi tiết, thành phần, thuôc tính của sự vật.",
+      "Điển hình hoá.",
+      "Liên hợp."
+    ],
+    correct: 1 // 113B
+  },
+  {
+    id: 114,
+    q: "“Một con ngựa đau cả tàu bỏ cỏ” là biểu hiện của quy luật nào?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật di chuyển",
+      "Quy luật lây lan",
+      "Quy luật hình thành tình cảm"
+    ],
+    correct: 2 // 114C
+  },
+  {
+    id: 115,
+    q: "Khi MC công bố giải thưởng cho Nghệ sĩ xuất sắc nhất năm 2022, ca sĩ B đã khóc nức nở và không tin rằng mình là người nhận được giải thưởng này. Đây là mức độ nào trong đời sống tình cảm?",
+    a: [
+      "Cảm xúc",
+      "Tâm trạng",
+      "Xúc động",
+      "Rung động"
+    ],
+    correct: 2 // 115C
+  },
+  {
+    id: 116,
+    q: "“Tình trong như đã, mặt ngoài còn e” biểu hiện đặc trưng nào của tình cảm?",
+    a: [
+      "Tính nhận thức",
+      "Tính chân thực",
+      "Tính ổn định",
+      "Tính xã hội"
+    ],
+    correct: 1 // 116B
+  },
+  {
+    id: 117,
+    q: "“Xa thương, gần thường” biểu hiện quy luật nào?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật di chuyển",
+      "Quy luật lây lan",
+      "Quy luật hình thành tình cảm"
+    ],
+    correct: 0 // 117A
+  },
+  {
+    id: 118,
+    q: "Tình cảm là:",
+    a: [
+      "Thuộc tính tâm lý",
+      "Trạng thái tâm lý",
+      "Quá trình tâm lý",
+      "Mức độ cao của tâm lý"
+    ],
+    correct: 0 // 118A
+  },
+  {
+    id: 119,
+    q: "Ngày mai là ngày thi tâm lý học đại cương, Lan chập chờn suốt đêm không ngủ được. Đây là biểu hiện của:",
+    a: [
+      "Xúc động",
+      "Tâm trạng",
+      "Cảm xúc",
+      "Màu sắc xúc cảm"
+    ],
+    correct: 1 // 119B
+  },
+  {
+    id: 120,
+    q: "Thể hiện thái độ của con người đối với sự khám phá thế giới: lòng ham hiểu biết, óc hoài nghi khoa học,... là biểu hiện của:",
+    a: [
+      "Tình cảm đạo đức",
+      "Tình cảm trí tuệ",
+      "Tình cảm thẩm mĩ",
+      "Tình cảm mang tính chất thế giới quan"
+    ],
+    correct: 1 // 120B
+  },
+  {
+    id: 121,
+    q: "“Năng mưa thì giếng năng đầy/ Anh năng đi lại mẹ thầy năng thương” là biểu hiện của quy luật nào?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật di chuyển",
+      "Quy luật lây lan",
+      "Quy luật hình thành tình cảm"
+    ],
+    correct: 3 // 121D
+  },
+  {
+    id: 122,
+    q: "Lan hiểu vì sao Mẹ lại yêu thương và hy sinh nhiều cho mình như thế. Điều này thể hiện đặc điểm nào trong đời sống tình cảm?",
+    a: [
+      "Tính nhận thức",
+      "Tính chân thực",
+      "Tính ổn định",
+      "Tính xã hội"
+    ],
+    correct: 0 // 122A
+  },
+  {
+    id: 123,
+    q: "Tình cảm gia đình, tình yêu quê hương đã khiến Thu cố gắng học tập để trở về xây dựng quê hương là biểu hiện đặc trưng nào của tình cảm?",
+    a: [
+      "Tính nhận thức",
+      "Tính chân thực",
+      "Tính ổn định",
+      "Tính xã hội"
+    ],
+    correct: 3 // 123D
+  },
+  {
+    id: 124,
+    q: "Một kỹ xảo đã hình thành, nếu không được luyện tập, củng cố, sử dụng thường xuyên sẽ bị suy yếu và mất đi. Đó là nội dung của quy luật:",
+    a: [
+      "QL tiến bộ không đồng đều",
+      "QL “đỉnh” của phương pháp luyện tập",
+      "QL tác động qua lại giữa kỹ xảo cũ và kỹ xảo mới",
+      "QL dập tắt kỹ xảo"
+    ],
+    correct: 3 // 124D
+  },
+  {
+    id: 125,
+    q: "Muốn quản lí cảm xúc đặc biệt là kiểm soát sự tức giận, phẩm chất ý chí đầu tiên cần rèn luyện là:",
+    a: [
+      "Tính tự chủ",
+      "Tính quyết đoán",
+      "Tính độc lập",
+      "Tính kiên trì"
+    ],
+    correct: 0 // 125A
+  },
+  {
+    id: 126,
+    q: "Ý chí là mặt … của ý thức?",
+    a: [
+      "Năng động",
+      "Tích cực",
+      "Cố gắng",
+      "Điều chỉnh hành vi"
+    ],
+    correct: 0 // 126A
+  },
+  {
+    id: 127,
+    q: "Người có khả năng kiểm tra các hành vi của bản thân, biết kiềm hãm những hành động không cần thiết là người có phẩm chất ý chí nào ?",
+    a: [
+      "Tính tự chủ.",
+      "Tính quyết đoán.",
+      "Tính dũng cảm.",
+      "Tính kiên trì."
+    ],
+    correct: 0 // 127A
+  },
+  {
+    id: 128,
+    q: "“Khả năng đưa ra những quyết định kịp thời mà không có những tình trạng dao động không cần thiết hay phụ thuộc vào những tác động xung quanh”. Đây là phẩm chất đặc trưng nào của ý chí?",
+    a: [
+      "Tính tự chủ.",
+      "Tính kiên trì.",
+      "Tính độc lập",
+      "Tính quyết đoán."
+    ],
+    correct: 3 // 128D
+  },
+  {
+    id: 129,
+    q: "Đặc điểm nào sau đây thuộc về hành động tự động hóa",
+    a: [
+      "Do luyện tập",
+      "Được lặp đi lặp lại nhiều lần",
+      "Không cần sự kiểm soát của ý thức",
+      "Tất cả đều đúng"
+    ],
+    correct: 3 // 129D
+  },
+  {
+    id: 130,
+    q: "Khi xem phim hoạt hình, càng yêu mến nhân vật Bạch Tuyết hiền lành thì càng căm ghét mụ hoàng hậu độc ác. Đây là ví dụ của quy luật nào trong đời sống tình cảm?",
+    a: [
+      "Quy luật cảm ứng",
+      "Quy luật pha trộn",
+      "Quy luật hình thành tình cảm",
+      "Quy luật thích ứng"
+    ],
+    correct: 0 // 130A
+  },
+  {
+    id: 131,
+    q: "Ánh sáng con người nhìn thấy được dao động trong khoảng từ 380 nm đến 780 nm. Đề cập đến quy luật nào của cảm giác?",
+    a: [
+      "Quy luật thích ứng của cảm giác",
+      "Quy luật tác động qua lại giữa các cảm giác đồng loại",
+      "Quy luật ngưỡng cảm giác",
+      "Quy luật tác động qua lại giữa các cảm giác khác loại"
+    ],
+    correct: 2 // 131C
+  },
+  {
+    id: 132,
+    q: "Một học sinh vi phạm nội quy, giáo viên thường nhắc nhở cả nhóm, lớp để dùng ảnh hưởng của tập thể tác động đến cá nhân học sinh vi phạm. Đây là sự vận dụng của các cấp độ ý thức nào?",
+    a: [
+      "Ý thức",
+      "Tự ý thức",
+      "Ý thức nhóm, ý thức tập thể",
+      "Tất cả các cấp độ trên"
+    ],
+    correct: 2 // 132C
+  },
+  {
+    id: 133,
+    q: "Tình huống nào không phải là hiện tượng tâm lý xuất?",
+    a: [
+      "Lan nhớ về những kỷ niệm thời thơ ấu",
+      "Hạnh say sưa lắng nghe cô giáo giảng bài",
+      "Trời mưa bất ngờ khiến My bị ướt sũng",
+      "Hùng là một sinh viên năng động"
+    ],
+    correct: 2 // 133C
+  },
+  {
+    id: 134,
+    q: "Khi tóm tắt nội dung bài học, học sinh dùng bút màu đỏ để tô màu cho những tiêu đề chính, gạch chân cho những từ khóa quan trọng để dễ nhận diện hơn. Người học sinh đã vận dụng quy luật nào của tri giác?",
+    a: [
+      "Quy luật về tính đối tượng của tri giác",
+      "Quy luật về tính ổn định của tri giác",
+      "Quy luật về tính lựa chọn của tri giác",
+      "Quy luật về tính ảo ảnh của tri giác"
+    ],
+    correct: 2 // 134C
+  },
+  {
+    id: 135,
+    q: "Để điều chỉnh hành vi của học sinh chưa ngoan. Giáo viên có thể áp dụng cấu trúc của ý thức để giáo dục. Biện pháp nào đem lại hiệu quả trong các biện pháp dưới đây?",
+    a: [
+      "Tác động về mặt thái độ để thay đổi hành vi, hành vi tốt lặp lại nhiều lần hình thành thói quen tốt",
+      "Tác động từ nhận thức để học sinh nhận biết hậu của hành vi chưa ngoan, từ đó hình thành thái độ đúng đắn, sau đó học sinh tự điều chỉnh hành vi của mình dưới sự hướng dẫn của giáo viên",
+      "Tác động vào mặt hành vi, thay đổi điều chỉnh từng thói quen tiêu cực, động viên khen ngợi khi học sinh làm tốt",
+      "Áp dụng kỷ luật, nhắc nhở thường xuyên, thực hiện nghiêm nội quy để điều chỉnh hành vi chưa ngoan"
+    ],
+    correct: 1 // 135B
+  },
+  {
+    id: 136,
+    q: "Mô tả nào dưới đây là vận dụng quy luật tác động qua lại giữa các cảm giác cùng loại vào cuộc sống?",
+    a: [
+      "Khi ăn dính phải ớt rất cay nên uống sữa để lưỡi dịu cay hơn",
+      "Phòng hòa nhạc thường tắt đèn để thính giả nghe được rõ hơn",
+      "Đắp khăn lạnh hoặc rửa mặt bằng nước lạnh thì độ tinh của mắt sẽ tăng lên",
+      "Không thể nào ăn ngon miệng khi ngửi phải những mùi khó chịu"
+    ],
+    correct: 2 // 136C
+  },
+  {
+    id: 137,
+    q: "Trong các trường hợp dưới đây, trường hợp nào là hành vi vô thức?",
+    a: [
+      "Nhiều sinh viên ăn bánh tráng trộn xong bỏ vào hộc bàn trong lớp rồi ra về luôn",
+      "Khi thuyết trình, Tâm có thói quen là hay dùng tay vuốt tóc",
+      "Tâm vượt đèn đỏ để kịp giờ thuyết trình",
+      "Tất cả các câu trên đều đúng"
+    ],
+    correct: 3 // 137D
+  },
+  {
+    id: 138,
+    q: "Lời khuyên sau đây vận dụng quy luật nào của tri giác: Nếu bạn có làn da ngâm, “bánh mật” thì không nên mặc những chiếc áo trắng tinh mà hãy chọn những chiếc áo màu xám nhạt, phối cùng quần tối màu.",
+    a: [
+      "Quy luật về tính lựa chọn",
+      "Quy luật về tính đối tượng",
+      "Quy luật về tính có ý nghĩa",
+      "Quy luật về tính ảo ảnh"
+    ],
+    correct: 3 // 138D
+  },
+  {
+    id: 139,
+    q: "Tự ý thức được hiểu là?",
+    a: [
+      "Tự giáo dục bản thân theo lý tưởng của mình",
+      "So sánh bản thân với mọi người để điều chỉnh theo góp ý của nhiều người về một vấn đề nào đó",
+      "Năng lực nhận thức và xác định thái độ đối với bản thân, năng lực tự điều khiển, điều chỉnh hành vi, thái độ cũng như toàn bộ sự phát triển nhân cách",
+      "Tất cả các đáp án trên đều đúng"
+    ],
+    correct: 2 // 139C
+  },
+  {
+    id: 140,
+    q: "Định nghĩa nào sau đây là đúng và đầy đủ nhất khi nói về giao tiếp?",
+    a: [
+      "Giao tiếp là hình thức đặc biệt cho mối quan hệ giữa con người với con người",
+      "Giao tiếp giúp cá nhân biểu lộ tâm trạng, thái độ của mình đối với người khác cũng như có thể bộc lộ tâm trạng, thái độ của mình về một vấn đề nhất định.",
+      "Giao tiếp là một trong những dạng thức cơ bản của hoạt động của con người",
+      "Giao tiếp là sự tiếp xúc tâm lý giữa người với người thông qua đó con người trao đổi thông tin, cảm xúc, tác động qua lại và ảnh hưởng lẫn nhau mà trong đó giao tiếp xác lập và vận hành mối quan hệ người – người"
+    ],
+    correct: 3 // 140D
+  },
+  {
+    id: 141,
+    q: "Trong truyện “Tam Quốc Diễn Nghĩa” nhân vật Khổng Minh Gia cát Lượng là người có biểu hiện thích ứng nhanh , dễ chuyển hướng chú ý và nắm thế chủ động, trí tuệ mền dẻo, giọng nói sinh động... Theo bạn đây là người theo kiểu khí chất gì ?",
+    a: [
+      "Khí chất linh hoạt",
+      "Khí chất bình thản",
+      "Khí chất ưu tư",
+      "Khí chất nóng nảy"
+    ],
+    correct: 0 // 141A
+  },
+  {
+    id: 142,
+    q: "“Lan vô tình ăn phải ớt cay, nước mắt, nước mũi chảy giàn giụa, mắt như mờ đi, tai như ù lên”. Hiện tượng này có liên quan đến quy luật nào của cảm giác?",
+    a: [
+      "Quy luật thích ứng của cảm giác.",
+      "Quy luật tác động lẫn nhau giữa các cảm giác khác loại.",
+      "Quy luật ngưỡng của cảm giác.",
+      "Quy luật tác động lẫn nhau giữa các cảm giác cùng loại."
+    ],
+    correct: 1 // 142B
+  },
+  {
+    id: 143,
+    q: "Một giáo viên được đồng nghiệp nhận xét là “chu đáo, kiên trì và dễ cảm thông”. Điều này thể hiện rõ nhất đặc điểm nào của tính cách?",
+    a: [
+      "Thuộc tính bẩm sinh, khó thay đổi",
+      "Chỉ biểu hiện qua khả năng trí tuệ",
+      "Hệ thống thái độ ổn định đối với bản thân, người khác và công việc",
+      "Sự tổng hợp các thuộc tính khí chất"
+    ],
+    correct: 2 // 143C
+  },
+  {
+    id: 144,
+    q: "Đâu là mệnh đề đúng dùng để phân biệt cảm giác và tri giác?",
+    a: [
+      "Cảm giác phản ánh riêng lẻ từng thuộc tính của sự vật hiện tượng, tri giác phản ánh khái quát các thuộc tính bản chất của sự vật hiện tượng.",
+      "Cảm giác phản ánh thuộc tính bề ngoài của sự vật hiện tượng, tri giác phản ánh các thuộc tính bản chất, bên trong của sự vật hiện tượng.",
+      "Cảm giác phản ánh riêng lẻ từng thuộc tính bề ngoài của sự vật hiện tượng, tri giác phản ánh sự vật hiện tượng một cách hoàn chỉnh, biết rõ ràng sự vậy này hay sự vật kia.",
+      "Cảm giác phản ánh sự vật hiện tượng một cách trực tiếp, tri giác phản ánh sự vật hiện một cách gián tiếp thông qua các phương tiện, công cụ trung gian, máy móc…"
+    ],
+    correct: 2 // 144C
+  },
+  {
+    id: 145,
+    q: "Trong lớp học, khi giảng viên vừa nói vừa chiếu slide, sinh viên chú ý nhiều hơn đến hình ảnh có màu sắc nổi bật thay vì chữ trắng đen. Đây là minh chứng cho:",
+    a: [
+      "Tính ảo ảnh",
+      "Tính lựa chọn của tri giác",
+      "Tính có ý nghĩa",
+      "Tính ổn định"
+    ],
+    correct: 1 // 145B
+  },
+  {
+    id: 146,
+    q: "Một bạn nhỏ thường xuyên được khen ngợi và khuyến khích khi giúp đỡ bạn bè. Lâu dần, bạn ấy hình thành tình cảm yêu thương và quan tâm đến người khác. Đây là minh họa cho quy luật nào?",
+    a: [
+      "Quy luật tương phản tình cảm.",
+      "Quy luật thích ứng.",
+      "Quy luật lây lan tình cảm.",
+      "Quy luật hình thành tình cảm."
+    ],
+    correct: 3 // 146D
+  },
+  {
+    id: 147,
+    q: "Định nghĩa nào về chú ý là chuẩn xác nhất?",
+    a: [
+      "Trạng thái hưng phấn cảm xúc trước kích thích lạ.",
+      "Sự định hướng và tập trung hoạt động ý thức vào đối tượng/nhiệm vụ chủ đạo, huy động điều kiện tâm lý–sinh lý cần thiết để hoạt động đạt hiệu quả.",
+      "Khả năng ghi nhớ không chủ định.",
+      "Thói quen nhìn chằm chằm vào một điểm."
+    ],
+    correct: 1 // 147B
+  },
+  {
+    id: 148,
+    q: "“Việc không biết rõ – đừng nói. Chuyện chưa xảy ra – đừng tùy tiện nói bừa. Chuyện về người khác – đừng nên bình luận.” Điều này thể hiện thể hiện rõ nhất chức năng nào của giao tiếp?",
+    a: [
+      "Chức năng thông tin hai chiều",
+      "Chức năng xúc cảm",
+      "Chức năng tổ chức và phối hợp hành động",
+      "Chức năng lắng nghe và phản hồi thông tin"
+    ],
+    correct: 3 // 148D
+  },
+  {
+    id: 149,
+    q: "Giáo viên muốn xây dựng bầu không khí học tập tích cực, nên khuyến khích một số học sinh xung phong phát biểu để tạo sự hào hứng cho các bạn khác trong lớp. Giáo viên đã áp dụng quy luật nào trong đời sống tình cảm?",
+    a: [
+      "Quy luật thích ứng",
+      "Quy luật tương phản",
+      "Quy luật hình thành tình cảm",
+      "Quy luật lây lan"
+    ],
+    correct: 3 // 149D
+  },
+  {
+    id: 150,
+    q: "Một đứa trẻ bị thất lạc và sống nhiều năm trong rừng, dù có cấu tạo thể chất bình thường nhưng khi được tìm thấy lại không biết nói, không biết giao tiếp như con người, chỉ ăn uống và di chuyển giống động vật. Trường hợp này phản ánh đặc điểm nào của tâm lý người?",
+    a: [
+      "Tính tích cực",
+      "Tính sáng tạo",
+      "Tính lịch sử – xã hội",
+      "Tính chủ thể"
+    ],
+    correct: 2 // 150C
+  }
+];
+
+
+    // ==========================================
+    // 2. LOGIC XỬ LÝ
+    // ==========================================
+    
+    let currentQuestions = [];
+    let currentDeckId = 1;
+    let isLoginMode = true;
+    let currentUser = "";
+    
+    // Biến cho Timer
+    let timerInterval;
+    const TIME_LIMIT = 30 * 60; // 60 phút (tính bằng giây)
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // --- HỆ THỐNG TÀI KHOẢN ---
+    function initApp() {
+        const user = localStorage.getItem("quizUser");
+        if(user) {
+            currentUser = user;
+            showDashboard(user);
+        } else {
+            showAuth();
+        }
+    }
+
+    function showAuth() {
+        document.getElementById("auth-view").style.display = "block";
+        document.getElementById("dashboard-view").style.display = "none";
+        document.getElementById("quiz-view").style.display = "none";
+        document.getElementById("history-view").style.display = "none";
+    }
+
+    function showDashboard(user) {
+        document.getElementById("auth-view").style.display = "none";
+        document.getElementById("dashboard-view").style.display = "block";
+        document.getElementById("quiz-view").style.display = "none";
+        document.getElementById("history-view").style.display = "none";
+        document.getElementById("user-display").innerText = user;
+    }
+
+    function toggleAuthMode() {
+        isLoginMode = !isLoginMode;
+        document.getElementById("auth-title").innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký";
+        document.querySelector("#auth-view button").innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký";
+        document.getElementById("switch-link").innerText = isLoginMode ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập";
+        document.getElementById("auth-msg").innerText = "";
+    }
+
+    function handleAuth() {
+        const u = document.getElementById("username").value.trim();
+        const p = document.getElementById("password").value.trim();
+        const msg = document.getElementById("auth-msg");
+        
+        if(!u || !p) { msg.innerText = "Vui lòng nhập đủ thông tin"; return; }
+        
+        let users = JSON.parse(localStorage.getItem("quizUsers")) || {};
+        
+        if(isLoginMode) {
+            if(users[u] === p) {
+                localStorage.setItem("quizUser", u);
+                currentUser = u;
+                showDashboard(u);
+            } else { msg.innerText = "Sai thông tin đăng nhập"; }
+        } else {
+            if(users[u]) { msg.innerText = "Tên này đã tồn tại"; }
+            else {
+                users[u] = p;
+                localStorage.setItem("quizUsers", JSON.stringify(users));
+                localStorage.setItem("quizUser", u);
+                currentUser = u;
+                showDashboard(u);
+            }
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("quizUser");
+        location.reload();
+    }
+
+    // --- LOGIC LỊCH SỬ ---
+    function saveHistory(score, total) {
+        const historyItem = {
+            user: currentUser,
+            deck: currentDeckId,
+            score: score,
+            total: total,
+            date: new Date().toLocaleString('vi-VN')
+        };
+        let history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+        history.push(historyItem);
+        localStorage.setItem("quizHistory", JSON.stringify(history));
+    }
+
+    function showHistory() {
+        document.getElementById("dashboard-view").style.display = "none";
+        document.getElementById("history-view").style.display = "block";
+
+        let history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+        let userHistory = history.filter(h => h.user === currentUser).reverse();
+        const contentDiv = document.getElementById("history-content");
+        
+        if(userHistory.length === 0) {
+            contentDiv.innerHTML = "<p style='text-align:center'>Chưa có lịch sử làm bài.</p>";
+            return;
+        }
+
+        let html = `<table class="history-table"><thead><tr><th>Thời Gian</th><th>Bộ Đề</th><th>Điểm</th><th>KQ</th></tr></thead><tbody>`;
+        userHistory.forEach(h => {
+            const percent = (h.score / h.total) * 100;
+            const scoreClass = percent >= 80 ? "high-score" : (percent < 50 ? "low-score" : "");
+            html += `<tr><td>${h.date}</td><td>Đề ${h.deck}</td><td class="${scoreClass}">${h.score}/${h.total}</td><td>${percent >= 50 ? "Đạt" : "Trượt"}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        contentDiv.innerHTML = html;
+    }
+
+    function clearHistory() {
+        if(confirm("Xóa toàn bộ lịch sử của bạn?")) {
+            let history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+            let newHistory = history.filter(h => h.user !== currentUser);
+            localStorage.setItem("quizHistory", JSON.stringify(newHistory));
+            showHistory();
+        }
+    }
+
+    // --- LOGIC TIMER (MỚI) ---
+    function startTimer(duration, display) {
+        let timer = duration, minutes, seconds;
+        clearInterval(timerInterval); // Reset timer cũ nếu có
+        
+        timerInterval = setInterval(function () {
+            minutes = parseInt(timer / 30, 10);
+            seconds = parseInt(timer % 60, 10);
+
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.textContent = minutes + ":" + seconds;
+
+            if (--timer < 0) {
+                clearInterval(timerInterval);
+                alert("Hết giờ làm bài!");
+                checkAnswers(true); // Tự động nộp bài
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    // --- LOGIC BỘ ĐỀ VÀ LÀM BÀI ---
+    function startQuiz(deckId) {
+        if(!database || database.length === 0) { alert("Chưa có dữ liệu!"); return; }
+
+        currentDeckId = deckId;
+        const startIndex = (deckId - 1) * 50;
+        let subset = database.slice(startIndex, startIndex + 50);
+        
+        if(subset.length === 0) { alert("Lỗi bộ đề!"); return; }
+
+        let quizData = JSON.parse(JSON.stringify(subset));
+        quizData = shuffle(quizData);
+
+        quizData.forEach(q => {
+            let answersWithIndex = q.a.map((ans, index) => ({ text: ans, originalIndex: index }));
+            answersWithIndex = shuffle(answersWithIndex);
+            q.a = answersWithIndex.map(obj => obj.text);
+            let oldCorrect = (q.correct !== undefined) ? q.correct : q.c;
+            q.c = answersWithIndex.findIndex(obj => obj.originalIndex === oldCorrect);
+        });
+
+        currentQuestions = quizData;
+        renderQuiz();
+    }
+
+    function renderQuiz() {
+        document.getElementById("dashboard-view").style.display = "none";
+        document.getElementById("quiz-view").style.display = "block";
+        document.getElementById("quiz-title").innerText = `BỘ ĐỀ SỐ ${currentDeckId}`;
+        
+        // Reset nút
+        document.getElementById("submit-btn").style.display = "inline-block";
+        document.getElementById("retry-btn").style.display = "none";
+        document.getElementById("exit-btn").style.display = "none";
+        document.getElementById("score-board").style.display = "none";
+        
+        // Reset Timer hiển thị
+        document.getElementById("timer-box").textContent = "30:00";
+
+        const container = document.getElementById("quiz-container");
+        let html = "";
+        
+        currentQuestions.forEach((item, index) => {
+            let opts = "";
+            item.a.forEach((opt, i) => {
+                opts += `<label id="lbl-${index}-${i}"><input type="radio" name="q${index}" value="${i}"> ${opt}</label>`;
+            });
+            html += `<div class="question"><h3>Câu ${index + 1}: ${item.q}</h3><div class="options">${opts}</div><div class="explain" id="explain-${index}">➤ Đáp án đúng: ${item.a[item.c]}</div></div>`;
+        });
+        
+        container.innerHTML = html;
+        window.scrollTo(0,0);
+        
+        // Bắt đầu đếm ngược
+        startTimer(TIME_LIMIT, document.getElementById("timer-box"));
+    }
+
+    function checkAnswers(isAutoSubmit = false) {
+        // Dừng timer ngay lập tức
+        stopTimer();
+
+        let score = 0;
+        currentQuestions.forEach((item, index) => {
+            const inputs = document.getElementsByName(`q${index}`);
+            let userAns = -1;
+            for(let i=0; i<inputs.length; i++) {
+                if(inputs[i].checked) userAns = i;
+                inputs[i].disabled = true;
+            }
+            
+            const correctLbl = document.getElementById(`lbl-${index}-${item.c}`);
+            if(userAns === item.c) {
+                score++;
+                correctLbl.classList.add("correct");
+            } else {
+                correctLbl.classList.add("correct");
+                if(userAns !== -1) {
+                    document.getElementById(`lbl-${index}-${userAns}`).classList.add("wrong");
+                }
+                document.getElementById(`explain-${index}`).style.display = "block";
+            }
+        });
+        
+        saveHistory(score, currentQuestions.length);
+
+        const board = document.getElementById("score-board");
+        board.style.display = "block";
+        board.innerHTML = `Kết quả: ${score} / ${currentQuestions.length} câu đúng`;
+        board.style.backgroundColor = score >= 40 ? "#d4edda" : "#fff3cd";
+        
+        document.getElementById("submit-btn").style.display = "none";
+        document.getElementById("retry-btn").style.display = "inline-block";
+        document.getElementById("exit-btn").style.display = "inline-block";
+        window.scrollTo(0,0);
+    }
+
+    function retryCurrentDeck() {
+        if(confirm("Làm lại đề này?")) {
+            startQuiz(currentDeckId);
+        }
+    }
+
+    function backToDashboard() {
+        stopTimer(); // Đảm bảo timer dừng nếu thoát giữa chừng (dù nút back đã ẩn khi thi, nhưng dùng cho nút 'Về Menu' sau khi thi)
+        document.getElementById("dashboard-view").style.display = "block";
+        document.getElementById("quiz-view").style.display = "none";
+        document.getElementById("history-view").style.display = "none";
+    }
+
+    // Khởi chạy
+    window.onload = initApp;
+
+</script>
+</body>
+</html>
