@@ -1833,7 +1833,7 @@ nhận thấy có sự khác biệt về sự điều chỉnh âm thanh?",
     function toggleAuthMode() {
         isLoginMode = !isLoginMode;
         document.getElementById("auth-title").innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký";
-        document.querySelector("btn-action").innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký";
+        document.getElementById("btn-action").innerText = isLoginMode ? "Đăng Nhập" : "Đăng Ký";
         document.getElementById("switch-link").innerText = isLoginMode ? "Chưa có tài khoản? Đăng ký ngay" : "Đã có tài khoản? Đăng nhập";
         document.getElementById("auth-msg").innerText = "";
     }
@@ -2057,6 +2057,7 @@ nhận thấy có sự khác biệt về sự điều chỉnh âm thanh?",
 </script>
 </body>
 </html>
+
 
 
 
